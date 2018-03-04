@@ -8,9 +8,9 @@ import re
 # Создание регулярного выражения для адресов электронной почты. 
 dateRegex = re.compile(r'''(
     (\d{1,4})              # первая часть даты
-    (/|-)                  # разделитель
+    (/|-|\.)               # разделитель
     (\d{1,2})              # вторая часть даты
-    (/|-)                  # разделитель
+    (/|-|\.)               # разделитель
     (\d{2,4})              # разделитель
     )''', re.VERBOSE)
 # TODO: расширить регулярное выражения для охвата всех возможных вариантов
@@ -23,9 +23,11 @@ for groups in dateRegex.findall(text):
     if len(groups[1]) == 1:
         date = str(0) + ('-'.join([groups[1], groups[3], groups[5]]))
     elif len(groups[1]) == 2:                                 
-        date = groups[0]
-    elif len(groups[1]) == 4:
+        date = '-'.join([groups[1], groups[3], groups[5]])
+    elif len(groups[1]) == 4 and len(groups[3]) == 1:
         date = str(0) + ('-'.join([groups[3], groups[5], groups[1]]))
+    elif len(groups[1]) == 4 and len(groups[3]) == 2:
+        date = ('-'.join([groups[3], groups[5], groups[1]]))
     matches.append(date)
 
 # Копирование результатов в буфер обмена
@@ -35,3 +37,6 @@ if len(matches) > 0:
     print('\n'.join(matches))
 else:
     print('Даты не обнаружены')
+
+
+    
