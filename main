@@ -1,0 +1,37 @@
+#! python 3
+# dates.py - Находит даты разных форматов в буфере обмена
+# и приводит их к выбранному стандартному виду
+
+import pyperclip
+import re
+
+# Создание регулярного выражения для адресов электронной почты. 
+dateRegex = re.compile(r'''(
+    (\d{1,4})              # первая часть даты
+    (/|-)                  # разделитель
+    (\d{1,2})              # вторая часть даты
+    (/|-)                  # разделитель
+    (\d{2,4})              # разделитель
+    )''', re.VERBOSE)
+# TODO: расширить регулярное выражения для охвата всех возможных вариантов
+
+# Поиск соответствий в тексте, содержащемся в буфере обмена.
+# TODO: реализовать возможность выбора формата для отображения дат
+text = str(pyperclip.paste())
+matches = []
+for groups in dateRegex.findall(text):
+    if len(groups[1]) == 1:
+        date = str(0) + ('-'.join([groups[1], groups[3], groups[5]]))
+    elif len(groups[1]) == 2:                                 
+        date = groups[0]
+    elif len(groups[1]) == 4:
+        date = str(0) + ('-'.join([groups[3], groups[5], groups[1]]))
+    matches.append(date)
+
+# Копирование результатов в буфер обмена
+if len(matches) > 0:
+    pyperclip.copy('\n'.join(matches))
+    print('Скопировано в буфер обмена:')
+    print('\n'.join(matches))
+else:
+    print('Даты не обнаружены')
