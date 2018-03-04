@@ -5,7 +5,7 @@
 import pyperclip
 import re
 
-# Создание регулярного выражения для адресов электронной почты. 
+# Создание регулярного выражения для дат. 
 dateRegex = re.compile(r'''(
     (\d{1,4})              # первая часть даты
     (/|-|\.)               # разделитель
@@ -14,28 +14,78 @@ dateRegex = re.compile(r'''(
     (\d{2,4})              # разделитель
     )''', re.VERBOSE)
 
-# Поиск соответствий в тексте, содержащемся в буфере обмена.
-# TODO: реализовать возможность выбора формата для отображения дат
+# Получение текста из буфера обмена
 text = str(pyperclip.paste())
-matches = []
-for groups in dateRegex.findall(text):
-    if len(groups[1]) == 1:
-        date = str(0) + ('-'.join([groups[1], groups[3], groups[5]]))
-    elif len(groups[1]) == 2:                                 
-        date = '-'.join([groups[1], groups[3], groups[5]])
-    elif len(groups[1]) == 4 and len(groups[3]) == 1:
-        date = str(0) + ('-'.join([groups[3], groups[5], groups[1]]))
-    elif len(groups[1]) == 4 and len(groups[3]) == 2:
-        date = ('-'.join([groups[3], groups[5], groups[1]]))
-    matches.append(date)
 
-# Копирование результатов в буфер обмена
-if len(matches) > 0:
-    pyperclip.copy('\n'.join(matches))
-    print('Скопировано в буфер обмена:')
-    print('\n'.join(matches))
-else:
-    print('Даты не обнаружены')
+def choiceOfDateFormat():
+    '''
+    Фукнция предоставляет пользователю возможность выбрать желаемый формат
+    даты
+    '''
+    dateFormat = ''
+    separatorFormat = ''   
+    while dateFormat == '' and separatorFormat == '':
+        print('Выберите желаемый формат даты (введите соответствующую цифру)' +
+          ' ДД.ММ.ГГГГ(1), ДД-ММ-ГГГГ(2), ДД/ММ/ГГГГ(3), ММ.ДД.ГГГГ(4), ' +
+          'ММ-ДД-ГГГГ(5), ММ/ДД/ГГГГ(6), ГГГГ.ММ.ДД(7), ГГГГ-ММ-ДД(8), ' +
+          'ГГГГ/ММ/ДД(9)')
+        userChoice = int(input())
+        if userChoice in [1, 2, 3]:
+            dateFormat = 'DDMMYYYY'
+        elif userChoice in [4, 5, 6]:
+            dateFormat = 'MMDDYYYY'
+        elif userChoice in [7, 8, 9]:
+            dateFormat = 'YYYYMMDD'
+        if userChoice in [1, 4, 7]:
+            separatorFormat = '.'
+        elif userChoice in [2, 5, 8]:
+            separatorFormat = '-'
+        elif userChoice in [3, 6, 9]:
+            separatorFormat = '/'
+    return dateFormat, separatorFormat
+        
 
+def dateFormatConversion(text):
+    '''
+    Функция принимает текст, желаемый формат даты, желаемый формат разделителя
+    и приводит найденные в тексте даты в соответствие с желаемым форматом
+    '''
+    dateFormat, separatorFormat = choiceOfDateFormat()
+    matches = []
+    for groups in dateRegex.findall(text):
+        if dateFormat == 'DDMMYYYY':
+            if len(groups[1]) == 2:
+                date = separatorFormat.join([groups[1], groups[3], groups[5]])
+            elif len(groups[1]) == 4:
+                date = separatorFormat.join([groups[5], groups[3], groups[1]])
+        elif dateFormat == 'MMDDYYYY':
+            if len(groups[1]) == 2:
+                date = separatorFormat.join([groups[3], groups[1], groups[5]])
+            elif len(groups[1]) == 4:
+                date = separatorFormat.join([groups[3], groups[5], groups[1]])
+        elif dateFormat == 'YYYYMMDD':
+            if len(groups[1]) == 2:
+                date = separatorFormat.join([groups[5], groups[3], groups[1]])
+            elif len(groups[1]) == 4:
+                date = separatorFormat.join([groups[1], groups[3], groups[5]])
+        matches.append(date)
+    return matches
+
+
+def outputAndCopyToClipboard():
+    '''
+    Функция копирует в буфер обмена и выводит на экран даты в выбранном
+    ранее формате
+    '''
+    matches = dateFormatConversion(text)
+    if len(matches) > 0:
+        pyperclip.copy('\n'.join(matches))
+        print('Скопировано в буфер обмена:')
+        print('\n'.join(matches))
+    else:
+        print('Даты не обнаружены')
+
+outputAndCopyToClipboard()
+    
 
     
